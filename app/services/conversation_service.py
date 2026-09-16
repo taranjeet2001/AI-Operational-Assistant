@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.database.models import Conversation, ConversationMessage, MessageRole
+from app.database.models import (
+    Conversation,
+    ConversationMemory,
+    ConversationMessage,
+    MessageRole,
+    SupportTicket,
+    TicketDraft,
+)
 
 
 @dataclass(frozen=True)
@@ -18,6 +25,8 @@ class ConversationSummary:
 
 
 class ConversationService:
+    visible_roles = {MessageRole.USER, MessageRole.ASSISTANT}
+
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -30,11 +39,23 @@ class ConversationService:
     def get(self, conversation_id: str) -> Conversation | None:
         return self.session.get(Conversation, conversation_id)
 
+    def delete(self, conversation_id: str) -> bool:
+        conversation = self.get(conversation_id)
+        if conversation is None:
+            return False
+
+        for model in (ConversationMessage, ConversationMemory, TicketDraft, SupportTicket):
+            self.session.execute(delete(model).where(model.conversation_id == conversation_id))
+        self.session.delete(conversation)
+        self.session.commit()
+        return True
+
     def list_conversations(self) -> list[ConversationSummary]:
-        statement = select(Conversation).order_by(Conversation.updated_at.desc(), Conversation.created_at.desc())
-        conversations = list(
-            self.session.scalars(statement)
+        statement = select(Conversation).order_by(
+            Conversation.updated_at.desc(),
+            Conversation.created_at.desc(),
         )
+        conversations = list(self.session.scalars(statement))
         return [self._build_summary(conversation) for conversation in conversations]
 
     def list_messages(self, conversation_id: str) -> list[ConversationMessage]:
@@ -69,13 +90,13 @@ class ConversationService:
 
     def _build_summary(self, conversation: Conversation) -> ConversationSummary:
         messages = self.list_messages(conversation.id)
-        visible_messages = [
-            message for message in messages if message.role in {MessageRole.USER, MessageRole.ASSISTANT}
-        ]
+        visible_messages = [message for message in messages if message.role in self.visible_roles]
         first_user_message = next((message for message in visible_messages if message.role == MessageRole.USER), None)
         last_visible_message = visible_messages[-1] if visible_messages else None
+
         title = self._shorten(first_user_message.content if first_user_message else "New conversation", 54)
         last_message = self._shorten(last_visible_message.content, 90) if last_visible_message else None
+
         return ConversationSummary(
             conversation_id=conversation.id,
             title=title,

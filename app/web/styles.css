@@ -72,7 +72,9 @@ body {
   cursor: pointer;
   display: block;
   padding: 10px;
+  position: relative;
   text-align: left;
+  width: 100%;
 }
 
 .conversation-item:hover,
@@ -106,6 +108,24 @@ body {
   display: block;
   font-size: 0.75rem;
   margin-top: 7px;
+  padding-right: 58px;
+}
+
+.conversation-delete {
+  background: transparent;
+  border: 1px solid #3a4761;
+  color: #c7d2e6;
+  font-size: 0.72rem;
+  padding: 5px 8px;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
+.conversation-delete:hover {
+  background: #3b1f2a;
+  border-color: #6f3344;
+  color: #ffffff;
 }
 
 .empty-conversations {

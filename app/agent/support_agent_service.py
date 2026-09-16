@@ -1,4 +1,5 @@
 import json
+import logging
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from sqlalchemy.orm import Session
@@ -14,6 +15,9 @@ from app.tools.knowledge_search_tool import build_knowledge_search_tool
 from app.tools.ticket_creation_tool import build_ticket_creation_tool
 from app.tools.ticket_draft_tool import build_ticket_draft_tool
 from app.tools.ticket_lookup_tool import build_ticket_lookup_tool
+
+
+logger = logging.getLogger("operations_assistant.agent")
 
 
 class SupportAgentService:
@@ -94,6 +98,12 @@ class SupportAgentService:
     def _persist_tool_messages(self, conversation_id: str, messages: list) -> None:
         for message in messages:
             if isinstance(message, ToolMessage):
+                logger.info(
+                    "tool.call | conversation_id=%s | tool=%s | output=%s",
+                    conversation_id,
+                    message.name,
+                    message.content,
+                )
                 self.conversations.add_message(
                     conversation_id,
                     MessageRole.TOOL,

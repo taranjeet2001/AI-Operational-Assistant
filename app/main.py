@@ -9,10 +9,12 @@ from app.api.chat_routes import router as chat_router
 from app.api.knowledge_routes import router as knowledge_router
 from app.api.ticket_routes import router as ticket_router
 from app.database.database import create_database_tables
+from app.logging_config import configure_logging
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    configure_logging()
     create_database_tables()
     yield
 

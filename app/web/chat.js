@@ -12,6 +12,18 @@ const legacyConversationStorageKey = "northstar-it-assistant-conversation-id";
 const conversationStorageKey = "fictional-it-assistant-conversation-id";
 let conversationId;
 
+function isSmallScreen() {
+  return window.matchMedia("(max-width: 760px)").matches;
+}
+
+async function requestJson(url, options, errorMessage) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+  return response.json();
+}
+
 function migrateStoredConversationId() {
   const existingConversationId = localStorage.getItem(conversationStorageKey);
   const legacyConversationId = localStorage.getItem(legacyConversationStorageKey);
@@ -112,15 +124,12 @@ function formatConversationTime(value) {
 }
 
 async function fetchConversations() {
-  const response = await fetch("/conversations");
-  if (!response.ok) {
-    throw new Error("Unable to load conversations.");
-  }
-  return response.json();
+  return requestJson("/conversations", undefined, "Unable to load conversations.");
 }
 
 function renderConversationList(conversations) {
   conversationListElement.innerHTML = "";
+
   if (!conversations.length) {
     const emptyMessage = document.createElement("p");
     emptyMessage.className = "empty-conversations";
@@ -130,30 +139,47 @@ function renderConversationList(conversations) {
   }
 
   conversations.forEach((conversation) => {
-    const item = document.createElement("button");
-    const title = document.createElement("span");
-    const preview = document.createElement("span");
-    const meta = document.createElement("span");
-
-    item.type = "button";
+    const item = document.createElement("article");
+    item.role = "button";
+    item.tabIndex = 0;
     item.className = "conversation-item";
     item.dataset.conversationId = conversation.conversation_id;
     item.classList.toggle("active", conversation.conversation_id === conversationId);
 
+    const title = document.createElement("span");
     title.className = "conversation-title";
     title.textContent = conversation.title;
+
+    const preview = document.createElement("span");
     preview.className = "conversation-preview";
     preview.textContent = conversation.last_message || "Start the conversation";
+
+    const meta = document.createElement("span");
     meta.className = "conversation-meta";
     meta.textContent = `${conversation.message_count} messages - ${formatConversationTime(conversation.updated_at)}`;
 
-    item.append(title, preview, meta);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "conversation-delete";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await deleteConversation(conversation.conversation_id);
+    });
+
+    item.append(title, preview, meta, deleteButton);
     item.addEventListener("click", async () => {
       await openConversation(conversation.conversation_id);
-      if (window.matchMedia("(max-width: 760px)").matches) {
+      if (isSmallScreen()) {
         appShell.classList.add("sidebar-collapsed");
       }
     });
+    item.addEventListener("keydown", async (event) => {
+      if (event.key === "Enter") {
+        await openConversation(conversation.conversation_id);
+      }
+    });
+
     conversationListElement.append(item);
   });
 }
@@ -164,12 +190,31 @@ async function refreshConversationList() {
   return conversations;
 }
 
-async function startConversation() {
-  const response = await fetch("/conversations", { method: "POST" });
-  if (!response.ok) {
-    throw new Error("Unable to start a conversation.");
+async function deleteConversation(deletedConversationId) {
+  await requestJson(
+    `/conversations/${deletedConversationId}`,
+    { method: "DELETE" },
+    "Unable to delete the conversation.",
+  );
+
+  if (conversationId === deletedConversationId) {
+    localStorage.removeItem(conversationStorageKey);
+    conversationId = undefined;
   }
-  const data = await response.json();
+
+  const conversations = await refreshConversationList();
+  if (conversationId) return;
+
+  if (conversations.length) {
+    await openConversation(conversations[0].conversation_id);
+  } else {
+    await startConversation();
+  }
+}
+
+async function startConversation() {
+  const data = await requestJson("/conversations", { method: "POST" }, "Unable to start a conversation.");
+
   setActiveConversation(data.conversation_id);
   messagesElement.innerHTML = "";
   addOpeningMessage("New conversation started. How can I help?");
@@ -178,12 +223,12 @@ async function startConversation() {
 }
 
 async function openConversation(nextConversationId) {
-  const response = await fetch(`/conversations/${nextConversationId}`);
-  if (!response.ok) {
-    throw new Error("Conversation was not found.");
-  }
+  const conversation = await requestJson(
+    `/conversations/${nextConversationId}`,
+    undefined,
+    "Conversation was not found.",
+  );
 
-  const conversation = await response.json();
   setActiveConversation(conversation.conversation_id);
   messagesElement.innerHTML = "";
   removeTicketConfirmation();
@@ -201,15 +246,15 @@ async function openConversation(nextConversationId) {
 }
 
 async function sendMessage(message) {
-  const response = await fetch(`/conversations/${conversationId}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
-  });
-  if (!response.ok) {
-    throw new Error("The assistant could not process that message. Please try again.");
-  }
-  return response.json();
+  return requestJson(
+    `/conversations/${conversationId}/messages`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    },
+    "The assistant could not process that message. Please try again.",
+  );
 }
 
 async function submitMessage(message) {
@@ -294,7 +339,7 @@ sidebarToggle.addEventListener("click", () => {
   appShell.classList.toggle("sidebar-collapsed");
 });
 
-if (window.matchMedia("(max-width: 760px)").matches) {
+if (isSmallScreen()) {
   appShell.classList.add("sidebar-collapsed");
 }
 

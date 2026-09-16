@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -16,6 +18,7 @@ from app.services.conversation_service import ConversationService
 from app.services.ticket_draft_service import TicketDraftService
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
+logger = logging.getLogger("operations_assistant.chat")
 
 
 @router.post("", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
@@ -74,6 +77,15 @@ def get_conversation(
     )
 
 
+@router.delete("/{conversation_id}")
+def delete_conversation(conversation_id: str, session: Session = Depends(get_session)) -> dict[str, bool]:
+    deleted = ConversationService(session).delete(conversation_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation was not found.")
+    logger.info("chat.delete | conversation_id=%s", conversation_id)
+    return {"deleted": True}
+
+
 @router.post("/{conversation_id}/messages", response_model=ChatMessageResponse)
 def send_message(
     conversation_id: str,
@@ -81,11 +93,14 @@ def send_message(
     session: Session = Depends(get_session),
 ) -> ChatMessageResponse:
     agent = SupportAgentService(session, get_knowledge_retriever())
+    logger.info("chat.input | conversation_id=%s | message=%s", conversation_id, request.message)
     try:
         response, ticket_number = agent.reply(conversation_id, request.message)
     except ValueError as error:
+        logger.error("chat.error | conversation_id=%s | error=%s", conversation_id, error)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     pending_ticket = agent.get_pending_ticket_draft(conversation_id)
+    logger.info("chat.output | conversation_id=%s | response=%s", conversation_id, response)
     return ChatMessageResponse(
         response=response,
         ticket_number=ticket_number,
