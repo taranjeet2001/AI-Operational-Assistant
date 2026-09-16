@@ -4,6 +4,77 @@ An Agentic AI based IT support assistant for a fictional organization. The assis
 
 The project uses FastAPI with a simple HTML/CSS/JS chat UI. Streamlit is intentionally not used.
 
+## Evaluator Quick Setup
+
+1. Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+2. Install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+3. Create the local environment file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+4. Add your OpenAI API key in `.env`:
+
+```text
+OPENAI_API_KEY=your-api-key
+```
+
+5. Build the local FAISS knowledge index:
+
+```powershell
+python -m scripts.ingest_knowledge_base
+```
+
+6. Seed sample ticket data:
+
+```powershell
+python -m scripts.seed_sample_tickets
+```
+
+7. Run the application:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+8. Open the chat UI:
+
+```text
+http://127.0.0.1:8000
+```
+
+9. Try these sample prompts:
+
+```text
+My VPN is not working. Please create a ticket. My employee ID is EMP1024.
+```
+
+```text
+Show tickets for EMP1024
+```
+
+```text
+What is the status of ticket IT-0001?
+```
+
+10. Check runtime logs:
+
+```text
+logs/app.log
+```
+
 ## Problem Statement
 
 Internal employees often ask IT for help with VPN, MFA, password, Outlook, software access, and ticket updates. The goal is to build a local AI assistant that can:
@@ -130,6 +201,31 @@ python -m scripts.ingest_knowledge_base
 
 This creates a local FAISS index in `data/faiss_index/`. That folder is ignored by git because each developer can generate it locally.
 
+## Seed Sample Tickets
+
+The SQLite database is local and ignored by git. To create demo ticket data for lookup testing, run:
+
+```powershell
+python -m scripts.seed_sample_tickets
+```
+
+This creates two sample conversations and tickets:
+
+- `EMP1024`: VPN connection stuck on connecting.
+- `EMP2048`: Outlook desktop app not syncing emails.
+
+You can then ask:
+
+```text
+Show tickets for EMP1024
+```
+
+or:
+
+```text
+What is the status of the VPN ticket?
+```
+
 ## Run The Application
 
 ```powershell
@@ -178,6 +274,7 @@ The sidebar stores chat sessions. Use `New` to start a new chat. Use `Delete` on
 - `DELETE /conversations/{conversation_id}`: delete a chat session.
 - `POST /conversations/{conversation_id}/messages`: send a message to the agent.
 - `GET /tickets`: list/search tickets.
+- `GET /tickets?employee_id=EMP1024`: list tickets for an employee.
 - `GET /tickets/{ticket_number}`: get one ticket.
 - `GET /knowledge/search?query=vpn`: search knowledge base directly.
 

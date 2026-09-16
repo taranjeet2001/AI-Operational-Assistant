@@ -48,6 +48,7 @@ class TicketResponse(BaseModel):
     category: str
     priority: str
     status: str
+    employee_id: str | None
     device_details: str | None
     error_message: str | None
     created_at: datetime

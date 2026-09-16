@@ -11,6 +11,7 @@ class TicketDraftCommand:
     description: str
     category: str = "other"
     priority: str = "medium"
+    employee_id: str | None = None
     device_details: str | None = None
     error_message: str | None = None
 

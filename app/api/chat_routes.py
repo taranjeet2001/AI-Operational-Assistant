@@ -60,6 +60,7 @@ def get_conversation(
             "description": draft.description,
             "category": draft.category,
             "priority": draft.priority,
+            "employee_id": draft.employee_id,
             "device_details": draft.device_details,
             "error_message": draft.error_message,
         }

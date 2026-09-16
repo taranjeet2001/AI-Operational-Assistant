@@ -16,6 +16,7 @@ def to_ticket_response(ticket) -> TicketResponse:
         category=ticket.category,
         priority=ticket.priority,
         status=ticket.status,
+        employee_id=ticket.employee_id,
         device_details=ticket.device_details,
         error_message=ticket.error_message,
         created_at=ticket.created_at,
@@ -26,9 +27,15 @@ def to_ticket_response(ticket) -> TicketResponse:
 def list_tickets(
     status_filter: str | None = Query(default=None, alias="status"),
     search: str | None = Query(default=None),
+    employee_id: str | None = Query(default=None),
     session: Session = Depends(get_session),
 ) -> list[TicketResponse]:
-    tickets = TicketService(session).find(ticket_number=None, search_text=search, status=status_filter)
+    tickets = TicketService(session).find(
+        ticket_number=None,
+        search_text=search,
+        status=status_filter,
+        employee_id=employee_id,
+    )
     return [to_ticket_response(ticket) for ticket in tickets]
 
 

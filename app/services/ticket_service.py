@@ -12,6 +12,7 @@ class TicketCreateCommand:
     description: str
     category: str = "other"
     priority: str = "medium"
+    employee_id: str | None = None
     device_details: str | None = None
     error_message: str | None = None
 
@@ -28,6 +29,7 @@ class TicketService:
             description=command.description,
             category=command.category,
             priority=command.priority,
+            employee_id=command.employee_id,
             device_details=command.device_details,
             error_message=command.error_message,
         )
@@ -37,12 +39,20 @@ class TicketService:
         self.session.commit()
         return ticket
 
-    def find(self, ticket_number: str | None, search_text: str | None, status: str | None) -> list[SupportTicket]:
+    def find(
+        self,
+        ticket_number: str | None,
+        search_text: str | None,
+        status: str | None,
+        employee_id: str | None = None,
+    ) -> list[SupportTicket]:
         statement = select(SupportTicket).order_by(SupportTicket.created_at.desc())
         if ticket_number:
             statement = statement.where(SupportTicket.ticket_number == ticket_number.upper())
         if status:
             statement = statement.where(SupportTicket.status == status)
+        if employee_id:
+            statement = statement.where(SupportTicket.employee_id == employee_id.upper())
         if search_text:
             pattern = f"%{search_text}%"
             statement = statement.where(

@@ -78,6 +78,7 @@ function showTicketConfirmation(ticket) {
     ["Description", ticket.description],
     ["Category", ticket.category],
     ["Priority", ticket.priority],
+    ["Employee", ticket.employee_id || "Not provided"],
     ["Device", ticket.device_details || "Not provided"],
     ["Error", ticket.error_message || "Not provided"],
   ].forEach(([label, value]) => {

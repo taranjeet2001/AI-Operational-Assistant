@@ -26,12 +26,18 @@ def build_ticket_creation_tool(
                 description=draft.description,
                 category=draft.category,
                 priority=draft.priority,
+                employee_id=draft.employee_id,
                 device_details=draft.device_details,
                 error_message=draft.error_message,
             ),
         )
         ticket_drafts.mark_confirmed(draft)
-        return {"ticket_number": ticket.ticket_number, "status": ticket.status, "title": ticket.title}
+        return {
+            "ticket_number": ticket.ticket_number,
+            "status": ticket.status,
+            "title": ticket.title,
+            "employee_id": ticket.employee_id,
+        }
 
     return StructuredTool.from_function(
         func=create_ticket,

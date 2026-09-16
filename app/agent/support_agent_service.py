@@ -38,7 +38,7 @@ class SupportAgentService:
 
         history = self._load_history(conversation_id)
         summary = self.memory.get_summary(conversation_id)
-        graph = SupportAgentGraphFactory().build(self._build_tools(conversation_id))
+        graph = SupportAgentGraphFactory().build(self._build_tools(conversation_id, user_message))
         result = graph.invoke(
             {
                 "messages": [*history, HumanMessage(content=user_message)],
@@ -54,7 +54,10 @@ class SupportAgentService:
         self._refresh_summary_if_needed(conversation_id)
         return assistant_message.content, self._ticket_number_from_messages(result["messages"])
 
-    def _build_tools(self, conversation_id: str):
+    def _build_tools(self, conversation_id: str, user_message: str):
+        if self.ticket_drafts.get_pending(conversation_id) and self._is_confirmation_message(user_message):
+            return [build_ticket_creation_tool(self.ticket_service, self.ticket_drafts, conversation_id)]
+
         tools = [
             build_knowledge_search_tool(self.retriever),
             build_ticket_lookup_tool(self.ticket_service),
@@ -63,6 +66,21 @@ class SupportAgentService:
         if self.ticket_drafts.get_pending(conversation_id):
             tools.append(build_ticket_creation_tool(self.ticket_service, self.ticket_drafts, conversation_id))
         return tools
+
+    @staticmethod
+    def _is_confirmation_message(message: str) -> bool:
+        normalized_message = message.lower().strip()
+        confirmation_phrases = (
+            "confirm",
+            "confirmed",
+            "yes create",
+            "create it",
+            "go ahead",
+            "raise it",
+            "submit it",
+            "looks good",
+        )
+        return any(phrase in normalized_message for phrase in confirmation_phrases)
 
     def _load_history(self, conversation_id: str):
         messages = []
@@ -82,6 +100,7 @@ class SupportAgentService:
             "description": draft.description,
             "category": draft.category,
             "priority": draft.priority,
+            "employee_id": draft.employee_id,
             "device_details": draft.device_details,
             "error_message": draft.error_message,
         }
