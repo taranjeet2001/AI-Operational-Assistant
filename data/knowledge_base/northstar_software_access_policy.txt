@@ -1,0 +1,29 @@
+Northstar Technologies Internal IT Documentation
+Document: Software Installation and Application Access Policy
+Owner: IT Operations and Information Security
+Audience: All Northstar employees
+Last reviewed: September 2026
+
+1. Approved Software Installation
+
+Managed Windows and macOS laptops use Company Portal for approved software. Employees should search Company Portal before asking the service desk to install an application. Standard applications such as SecureConnect VPN, Microsoft 365, Visual Studio Code, approved browsers, and Zoom can be installed without a ticket when they appear in the portal.
+
+If an approved application is missing from Company Portal, restart the laptop, connect to the internet, and open Company Portal again. Wait up to 30 minutes after first device enrollment for the catalog to populate.
+
+2. Restricted Software
+
+Employees may not install unapproved remote-control tools, consumer VPNs, password managers, browser extensions that access corporate data, or software requiring administrator privileges. Requests for new software require manager approval and a business justification. The service desk cannot bypass this approval requirement.
+
+3. Requesting Access to Internal Systems
+
+Access to FinanceHub, production dashboards, source-control groups, and HR administration is role-based. Create an access ticket only after the employee's manager has approved the request through the Access Request form. The ticket description must name the target application, access level needed, business reason, and approving manager.
+
+For production access, also include the relevant cost centre and an end date if access is temporary. Production access requests are reviewed by the application owner and Security Operations; they are not granted by the AI assistant or first-line service desk.
+
+4. Priority Guidance
+
+Use low priority for a non-urgent software request. Use medium priority when a standard business task is blocked for one person. Use high priority when a critical business process is blocked for a team. Critical priority is reserved for widespread outage, active security incident, or a safety-related operational issue.
+
+5. Information Required in a Ticket
+
+Good tickets state what the employee was trying to do, what actually happened, when it began, the affected application, and any error message. Screenshots are useful only after confirming they do not show passwords, MFA codes, customer personal data, or access tokens.

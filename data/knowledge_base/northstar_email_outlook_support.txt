@@ -1,0 +1,29 @@
+Northstar Technologies Internal IT Documentation
+Document: Outlook and Microsoft 365 Email Support Runbook
+Owner: Workplace Technology
+Audience: Northstar employees and IT service desk
+Last reviewed: September 2026
+
+1. Scope
+
+Northstar uses Microsoft 365 for email, calendar, Teams, and OneDrive. Email should work on the corporate network and normal internet connections without SecureConnect VPN. A VPN connection is not required for Outlook sync and can occasionally interfere with a captive guest Wi-Fi login page.
+
+2. Outlook Shows Disconnected
+
+When Outlook displays Disconnected or Trying to connect, first confirm that an internet browser can open a public website. If browsing does not work, fix the network connection first. If the network works, open https://outlook.office.com and sign in with the Northstar account.
+
+If web Outlook works but the desktop client does not, close Outlook. Open Windows Settings, select Accounts, and make sure the Northstar work account is connected. Restart Outlook. If it still shows disconnected, restart the laptop before raising a ticket.
+
+3. Messages Are Delayed or Missing
+
+Check Outlook on the web to determine whether the message reached the mailbox. If it is visible on the web but not in the desktop client, the issue is local synchronization. Leave Outlook open with a stable internet connection for ten minutes. Check that the mailbox has available quota through Outlook settings.
+
+If a message is absent from both desktop and web Outlook, ask the sender to confirm the recipient address and time sent. For external emails, check the Junk Email folder. The IT service desk can trace a message only when given the sender address, recipient address, approximate send time, and email subject. Do not forward sensitive email content into a ticket unless the service desk requests it.
+
+4. Shared Mailbox Access
+
+Access to a shared mailbox such as payroll@northstar.example or sales-ops@northstar.example requires manager approval. The employee's manager must submit the request through the Access Request form. IT cannot grant shared mailbox access from an informal chat request alone.
+
+5. Escalation Details
+
+When creating an Outlook ticket, include whether the issue occurs in web Outlook, the desktop client, or the mobile app; the device and operating system; the exact error text; and when the issue began. Mark an issue high priority when it affects a department mailbox used for customer or operational communication.

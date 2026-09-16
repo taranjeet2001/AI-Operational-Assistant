@@ -1,0 +1,53 @@
+Northstar Technologies Internal IT Documentation
+Document: Remote Access VPN Support Guide
+Owner: Corporate IT Operations
+Audience: All Northstar employees and approved contractors
+Last reviewed: September 2026
+
+1. Purpose
+
+Northstar uses the SecureConnect VPN service to provide encrypted access to internal applications when employees work away from a Northstar office. The VPN is required for FinanceHub, internal Git services, the HR portal administration area, and several development environments. Microsoft 365 email and Teams do not normally require the VPN.
+
+2. Before You Connect
+
+Employees must have an active Northstar network account, an enrolled MFA method, and the SecureConnect client installed by Company Portal. Supported platforms are Windows 11, macOS 14 or later, and managed Ubuntu 22.04 laptops. Personal devices and unsupported operating systems cannot connect to the corporate VPN.
+
+Use the gateway vpn.northstar.internal. Sign in with your Northstar email address without the @northstar.example suffix. For example, Priya Sharma should use psharma, not psharma@northstar.example.
+
+3. Standard Connection Steps
+
+1. Confirm that the computer has an active internet connection.
+2. Open SecureConnect from the Start menu or Applications folder.
+3. Select the Northstar Corporate profile.
+4. Enter your Northstar username and password.
+5. Approve the MFA notification in the Northstar Authenticator application.
+6. Wait until SecureConnect displays Connected and shows a corporate IP address.
+7. Open the required internal application in a new browser tab.
+
+4. Authentication Failed Error
+
+The message "Authentication failed" usually means that the password, MFA approval, or account state could not be verified. Do not repeatedly retry the connection because five failed attempts can temporarily lock the network account.
+
+Follow these checks in order:
+
+1. Confirm that the username is your short Northstar username, not an email address.
+2. Sign in to https://password.northstar.internal from an internet-connected browser. If this fails, reset the Northstar password before trying the VPN again.
+3. Open Northstar Authenticator and confirm that its notifications are enabled. Approve only the sign-in prompt that you initiated.
+4. Check that the laptop date and time are set automatically. A clock difference greater than five minutes can make MFA validation fail.
+5. Quit SecureConnect completely, reopen it, and try one more time.
+
+If the error persists after these steps, create an IT ticket with the laptop operating system, approximate time of the failed attempt, the exact error message, and whether MFA approval appeared.
+
+5. Cannot Reach Gateway Error
+
+The message "Unable to reach gateway" generally indicates an internet, DNS, hotel Wi-Fi, or firewall issue. First test whether a public website loads. If public sites do not load, resolve the local network connection before contacting IT. If public sites load, disconnect from any personal VPN, proxy, or privacy relay. Then restart SecureConnect.
+
+Some guest networks block VPN traffic. If possible, switch to a mobile hotspot or a different network. Do not use an unapproved third-party VPN as a workaround. If the problem occurs only on one network, record the network name and location in the ticket.
+
+6. Connected but Internal Site Does Not Open
+
+Disconnect and reconnect once. Confirm that SecureConnect displays Connected, not Reconnecting. Close and reopen the browser, then retry the internal URL. If FinanceHub or Git services still do not open, capture the browser error and include the affected application name in the ticket.
+
+7. Security and Escalation
+
+Never share passwords, MFA codes, recovery codes, or screenshots containing access tokens with the service desk. A possible account compromise, an unexpected MFA prompt, or a lost managed laptop must be reported as high priority. For a suspected compromised account, call the Security Operations hotline rather than waiting for a standard VPN ticket.

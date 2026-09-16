@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fictional IT Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <div>
+            <p class="eyebrow">FICTIONAL</p>
+            <h2>Chats</h2>
+          </div>
+          <button id="new-chat-button" class="primary-button" type="button">New</button>
+        </div>
+        <nav id="conversation-list" class="conversation-list" aria-label="Saved conversations"></nav>
+      </aside>
+
+      <main class="chat-shell">
+        <header class="page-header">
+          <button id="sidebar-toggle" class="icon-button" type="button" aria-label="Toggle chats">Menu</button>
+          <div>
+            <p class="eyebrow">FICTIONAL TECHNOLOGIES</p>
+            <h1>IT Operations Assistant</h1>
+            <p class="subtitle">Get help from internal documentation or create and check support tickets.</p>
+          </div>
+        </header>
+
+        <section id="messages" class="messages" aria-live="polite">
+          <article class="message assistant-message">
+            <p>Hello. I can help with VPN, password, MFA, Outlook, software access, and support tickets.</p>
+          </article>
+        </section>
+
+        <form id="chat-form" class="chat-form">
+          <label class="sr-only" for="message-input">Your message</label>
+          <textarea
+            id="message-input"
+            rows="2"
+            maxlength="10000"
+            placeholder="Example: My VPN is not working. Please create a ticket."
+            required
+          ></textarea>
+          <button id="send-button" class="primary-button" type="submit">Send</button>
+        </form>
+        <p id="status-message" class="status-message">Starting a new conversation...</p>
+      </main>
+    </div>
+
+    <script src="/static/chat.js"></script>
+  </body>
+</html>

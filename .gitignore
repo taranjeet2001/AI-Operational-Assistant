@@ -1,0 +1,45 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+
+# Python environments and package artifacts
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+build/
+dist/
+
+# Python bytecode and test/tool caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
+*.pid
+
+# Local application and vector-store data generated from ingestion
+data/operations_assistant.db
+data/operations_assistant.db-*
+data/*.db*
+data/faiss_index/
+# Ignore indexes from the earlier Chroma-based local setup as well.
+data/vector_store/
+*.sqlite
+*.sqlite3
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
