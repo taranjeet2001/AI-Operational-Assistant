@@ -120,6 +120,8 @@ flowchart TD
     API --> Logs[logs/app.log]
 ```
 
+![AI Operations Assistant Flow](static_files/flow.png)
+
 ## LangGraph Flow
 
 ```mermaid
