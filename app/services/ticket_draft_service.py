@@ -41,3 +41,9 @@ class TicketDraftService:
     def mark_confirmed(self, draft: TicketDraft) -> None:
         draft.status = "confirmed"
         self.session.commit()
+
+    def clear(self, conversation_id: str) -> None:
+        draft = self.session.get(TicketDraft, conversation_id)
+        if draft:
+            self.session.delete(draft)
+            self.session.commit()

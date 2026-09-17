@@ -15,6 +15,7 @@ from app.tools.knowledge_search_tool import build_knowledge_search_tool
 from app.tools.ticket_creation_tool import build_ticket_creation_tool
 from app.tools.ticket_draft_tool import build_ticket_draft_tool
 from app.tools.ticket_lookup_tool import build_ticket_lookup_tool
+from app.tools.ticket_update_tool import build_ticket_update_tool
 
 
 logger = logging.getLogger("operations_assistant.agent")
@@ -60,13 +61,23 @@ class SupportAgentService:
         )
 
     def _build_tools(self, conversation_id: str, user_message: str):
-        if self.ticket_drafts.get_pending(conversation_id) and self._is_confirmation_message(user_message):
+        normalized = user_message.lower().strip()
+        is_update_intent = any(
+            keyword in normalized
+            for keyword in ("close", "closed", "resolve", "resolved", "cancel", "status", "change", "update", "reopen")
+        )
+        if (
+            self.ticket_drafts.get_pending(conversation_id)
+            and self._is_confirmation_message(user_message)
+            and not is_update_intent
+        ):
             return [build_ticket_creation_tool(self.ticket_service, self.ticket_drafts, conversation_id)]
 
         tools = [
             build_knowledge_search_tool(self.retriever),
             build_ticket_lookup_tool(self.ticket_service),
             build_ticket_draft_tool(self.ticket_drafts, conversation_id),
+            build_ticket_update_tool(self.ticket_service, self.ticket_drafts, conversation_id),
         ]
         if self.ticket_drafts.get_pending(conversation_id):
             tools.append(build_ticket_creation_tool(self.ticket_service, self.ticket_drafts, conversation_id))
