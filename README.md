@@ -10,7 +10,7 @@ The project uses FastAPI with a simple HTML/CSS/JS chat UI. Streamlit is intenti
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+venv\Scripts\Activate
 ```
 
 2. Install dependencies:
