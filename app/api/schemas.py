@@ -33,12 +33,18 @@ class ChatMessageRequest(BaseModel):
     message: str = Field(min_length=1, max_length=10_000)
 
 
+class ToolExecutionResponse(BaseModel):
+    tool_name: str
+    content: str
+
+
 class ChatMessageResponse(BaseModel):
     response: str
     requires_input: bool
     requires_confirmation: bool = False
     ticket_number: str | None = None
     pending_ticket: dict | None = None
+    tool_calls: list[ToolExecutionResponse] = Field(default_factory=list)
 
 
 class TicketResponse(BaseModel):

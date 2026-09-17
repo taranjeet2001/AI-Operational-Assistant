@@ -11,6 +11,7 @@ from app.api.schemas import (
     ConversationMessageResponse,
     ConversationResponse,
     ConversationSummaryResponse,
+    ToolExecutionResponse,
 )
 from app.database.database import get_session
 from app.knowledge.knowledge_retriever import get_knowledge_retriever
@@ -96,7 +97,7 @@ def send_message(
     agent = SupportAgentService(session, get_knowledge_retriever())
     logger.info("chat.input | conversation_id=%s | message=%s", conversation_id, request.message)
     try:
-        response, ticket_number = agent.reply(conversation_id, request.message)
+        response, ticket_number, tool_executions = agent.reply(conversation_id, request.message)
     except ValueError as error:
         logger.error("chat.error | conversation_id=%s | error=%s", conversation_id, error)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
@@ -108,4 +109,5 @@ def send_message(
         pending_ticket=pending_ticket,
         requires_confirmation=pending_ticket is not None,
         requires_input=ticket_number is None and response.endswith("?"),
+        tool_calls=[ToolExecutionResponse(**item) for item in tool_executions],
     )
