@@ -75,6 +75,92 @@ What is the status of ticket IT-0001?
 logs/app.log
 ```
 
+## EC2 Docker Deployment
+
+Use this path when deploying on an AWS EC2 instance.
+
+1. SSH into the EC2 instance:
+
+```bash
+ssh -i your-key.pem ubuntu@your-ec2-public-ip
+```
+
+2. Install Docker and Docker Compose plugin if they are not already installed:
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin git
+sudo usermod -aG docker $USER
+```
+
+Log out and SSH back in so the Docker group permission is applied.
+
+3. Clone the repository and enter the project folder:
+
+```bash
+git clone <your-repository-url>
+cd "AI Operation Assistant"
+```
+
+4. Create the `.env` file:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Set:
+
+```text
+OPENAI_API_KEY=your-api-key
+```
+
+5. Build the Docker image:
+
+```bash
+docker compose build
+```
+
+6. Create the FAISS knowledge index inside Docker:
+
+```bash
+docker compose run --rm app python -m scripts.ingest_knowledge_base
+```
+
+7. Seed sample tickets:
+
+```bash
+docker compose run --rm app python -m scripts.seed_sample_tickets
+```
+
+8. Start the application:
+
+```bash
+docker compose up -d
+```
+
+9. Check logs:
+
+```bash
+docker compose logs -f app
+```
+
+10. Open the app in the browser:
+
+```text
+http://your-ec2-public-ip:8000
+```
+
+Make sure the EC2 security group allows inbound TCP traffic on port `8000`.
+
+Useful Docker commands:
+
+```bash
+docker compose ps
+docker compose restart app
+docker compose down
+```
+
 ## Problem Statement
 
 Internal employees often ask IT for help with VPN, MFA, password, Outlook, software access, and ticket updates. The goal is to build a local AI assistant that can:
@@ -162,6 +248,12 @@ data/
   knowledge_base/        sample IT documentation
 scripts/
   ingest_knowledge_base.py
+  seed_sample_tickets.py
+static_files/
+  flow.png               architecture image used in README
+Dockerfile               container image definition
+docker-compose.yml       EC2/local Docker runtime setup
+.dockerignore            files excluded from Docker build context
 ```
 
 ## Setup
