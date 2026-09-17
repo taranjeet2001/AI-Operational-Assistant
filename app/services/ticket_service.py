@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from math import sqrt
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.database.models import SupportTicket
+from app.database.models import SupportTicket, TicketStatus
+from app.knowledge.embedding_service import EmbeddingService
 
 
 @dataclass(frozen=True)
@@ -18,8 +20,33 @@ class TicketCreateCommand:
 
 
 class TicketService:
+    duplicate_title_threshold = 0.60
+
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    def find_duplicate_by_title(self, title: str) -> tuple[SupportTicket, float] | None:
+        statement = select(SupportTicket).where(
+            SupportTicket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS])
+        )
+        tickets = list(self.session.scalars(statement))
+        if not tickets:
+            return None
+
+        embeddings = EmbeddingService().embeddings
+        new_title_embedding = embeddings.embed_query(title)
+        best_ticket = None
+        best_score = 0.0
+
+        for ticket in tickets:
+            score = self._cosine_similarity(new_title_embedding, embeddings.embed_query(ticket.title))
+            if score > best_score:
+                best_ticket = ticket
+                best_score = score
+
+        if best_ticket and best_score >= self.duplicate_title_threshold:
+            return best_ticket, best_score
+        return None
 
     def create(self, conversation_id: str, command: TicketCreateCommand) -> SupportTicket:
         ticket = SupportTicket(
@@ -59,3 +86,10 @@ class TicketService:
                 SupportTicket.title.ilike(pattern) | SupportTicket.description.ilike(pattern)
             )
         return list(self.session.scalars(statement.limit(20)))
+
+    @staticmethod
+    def _cosine_similarity(first: list[float], second: list[float]) -> float:
+        dot_product = sum(a * b for a, b in zip(first, second, strict=True))
+        first_length = sqrt(sum(value * value for value in first))
+        second_length = sqrt(sum(value * value for value in second))
+        return dot_product / (first_length * second_length)
