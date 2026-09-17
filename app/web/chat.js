@@ -43,6 +43,83 @@ function addMessage(content, role) {
   messagesElement.scrollTop = messagesElement.scrollHeight;
 }
 
+const toolMeta = {
+  knowledge_search: { icon: "🔍", label: "Knowledge Search" },
+  ticket_lookup: { icon: "🎫", label: "Ticket Lookup" },
+  ticket_draft: { icon: "📝", label: "Ticket Draft" },
+  ticket_creation: { icon: "🎟️", label: "Ticket Creation" },
+};
+
+function formatToolSummary(toolName, data) {
+  if (!data || typeof data !== "object") return String(data || "Action completed");
+  if (toolName === "knowledge_search") {
+    const count = data.results?.length || 0;
+    if (!count) return "No matching documents found in knowledge base.";
+    const sources = [...new Set(data.results.map((r) => r.source_file).filter(Boolean))];
+    return `Found ${count} relevant section${count > 1 ? "s" : ""} in ${sources.join(", ") || "knowledge base"}.`;
+  }
+  if (toolName === "ticket_lookup") {
+    const tickets = data.tickets || [];
+    if (!tickets.length) return "No matching support tickets found in database.";
+    return `Found ${tickets.length} ticket${tickets.length > 1 ? "s" : ""}: ${tickets.map((t) => `${t.ticket_number} (${t.status})`).join(", ")}`;
+  }
+  if (toolName === "ticket_draft") {
+    return `Prepared ticket draft: "${data.title || "Support Request"}" [${(data.priority || "medium").toUpperCase()}]`;
+  }
+  if (toolName === "ticket_creation") {
+    if (data.ticket_number) {
+      return `Created support ticket ${data.ticket_number} (${data.status || "open"})`;
+    }
+    if (data.duplicate_found) {
+      const matchPct = data.match_score ? ` (${Math.round(data.match_score * 100)}% match)` : "";
+      return `Duplicate ticket warning: Similar ticket ${data.existing_ticket?.ticket_number || ""} already exists${matchPct}.`;
+    }
+    return data.reason || "Ticket action completed.";
+  }
+  return "Tool execution finished.";
+}
+
+function addToolActionMessage(toolName, rawContent) {
+  const toolInfo = toolMeta[toolName] || { icon: "⚙️", label: toolName || "Tool Action" };
+  let parsedData = null;
+  try {
+    parsedData = typeof rawContent === "string" ? JSON.parse(rawContent) : rawContent;
+  } catch {
+    parsedData = rawContent;
+  }
+
+  const card = document.createElement("article");
+  card.className = "message tool-action-message";
+
+  const header = document.createElement("div");
+  header.className = "tool-action-header";
+
+  const badge = document.createElement("span");
+  badge.className = "tool-action-badge";
+  badge.textContent = `${toolInfo.icon} ${toolInfo.label}`;
+
+  const summary = document.createElement("span");
+  summary.className = "tool-action-summary";
+  summary.textContent = formatToolSummary(toolName, parsedData);
+
+  header.append(badge, summary);
+  card.append(header);
+
+  if (rawContent) {
+    const details = document.createElement("details");
+    details.className = "tool-action-details";
+    const detailsSummary = document.createElement("summary");
+    detailsSummary.textContent = "View action details";
+    const pre = document.createElement("pre");
+    pre.textContent = typeof parsedData === "object" ? JSON.stringify(parsedData, null, 2) : String(rawContent);
+    details.append(detailsSummary, pre);
+    card.append(details);
+  }
+
+  messagesElement.append(card);
+  messagesElement.scrollTop = messagesElement.scrollHeight;
+}
+
 function addOpeningMessage(text = "Hello. I can help with VPN, password, MFA, Outlook, software access, and support tickets.") {
   addMessage(text, "assistant");
 }
@@ -233,9 +310,13 @@ async function openConversation(nextConversationId) {
   setActiveConversation(conversation.conversation_id);
   messagesElement.innerHTML = "";
   removeTicketConfirmation();
-  conversation.messages
-    .filter((message) => message.role === "user" || message.role === "assistant")
-    .forEach((message) => addMessage(message.content, message.role));
+  conversation.messages.forEach((message) => {
+    if (message.role === "tool") {
+      addToolActionMessage(message.tool_name, message.content);
+    } else if (message.role === "user" || message.role === "assistant") {
+      addMessage(message.content, message.role);
+    }
+  });
   if (!messagesElement.childElementCount) {
     addOpeningMessage();
   }
@@ -266,6 +347,11 @@ async function submitMessage(message) {
 
   try {
     const result = await sendMessage(message);
+    if (Array.isArray(result.tool_calls) && result.tool_calls.length) {
+      result.tool_calls.forEach((tool) => {
+        addToolActionMessage(tool.tool_name, tool.content);
+      });
+    }
     addMessage(result.response, "assistant");
     if (result.requires_confirmation && result.pending_ticket) {
       showTicketConfirmation(result.pending_ticket);

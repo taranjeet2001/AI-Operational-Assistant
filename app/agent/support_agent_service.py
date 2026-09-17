@@ -31,7 +31,7 @@ class SupportAgentService:
         self.ticket_drafts = TicketDraftService(session)
         self.retriever = retriever
 
-    def reply(self, conversation_id: str, user_message: str) -> tuple[str, str | None]:
+    def reply(self, conversation_id: str, user_message: str) -> tuple[str, str | None, list[dict]]:
         conversation = self.conversations.get(conversation_id)
         if conversation is None:
             raise ValueError("Conversation was not found.")
@@ -47,12 +47,17 @@ class SupportAgentService:
             }
         )
         assistant_message = self._last_assistant_message(result["messages"])
+        turn_messages = result["messages"][len(history) + 1 :]
 
         self.conversations.add_message(conversation_id, MessageRole.USER, user_message)
-        self._persist_tool_messages(conversation_id, result["messages"][len(history) + 1 :])
+        self._persist_tool_messages(conversation_id, turn_messages)
         self.conversations.add_message(conversation_id, MessageRole.ASSISTANT, assistant_message.content)
         self._refresh_summary_if_needed(conversation_id)
-        return assistant_message.content, self._ticket_number_from_messages(result["messages"])
+        return (
+            assistant_message.content,
+            self._ticket_number_from_messages(result["messages"]),
+            self._tool_executions_from_messages(turn_messages),
+        )
 
     def _build_tools(self, conversation_id: str, user_message: str):
         if self.ticket_drafts.get_pending(conversation_id) and self._is_confirmation_message(user_message):
@@ -145,3 +150,11 @@ class SupportAgentService:
             if isinstance(message, ToolMessage) and message.name == "ticket_creation":
                 return json.loads(message.content).get("ticket_number")
         return None
+
+    @staticmethod
+    def _tool_executions_from_messages(messages: list) -> list[dict]:
+        return [
+            {"tool_name": message.name, "content": str(message.content)}
+            for message in messages
+            if isinstance(message, ToolMessage)
+        ]
