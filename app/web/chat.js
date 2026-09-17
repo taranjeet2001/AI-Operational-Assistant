@@ -48,6 +48,7 @@ const toolMeta = {
   ticket_lookup: { icon: "🎫", label: "Ticket Lookup" },
   ticket_draft: { icon: "📝", label: "Ticket Draft" },
   ticket_creation: { icon: "🎟️", label: "Ticket Creation" },
+  ticket_update: { icon: "🔄", label: "Ticket Update" },
 };
 
 function formatToolSummary(toolName, data) {
@@ -75,6 +76,12 @@ function formatToolSummary(toolName, data) {
       return `Duplicate ticket warning: Similar ticket ${data.existing_ticket?.ticket_number || ""} already exists${matchPct}.`;
     }
     return data.reason || "Ticket action completed.";
+  }
+  if (toolName === "ticket_update") {
+    if (data.updated) {
+      return `Updated ticket ${data.ticket_number} to ${(data.status || "updated").toUpperCase()}.`;
+    }
+    return data.reason || "Ticket update failed.";
   }
   return "Tool execution finished.";
 }
@@ -355,8 +362,7 @@ async function submitMessage(message) {
     addMessage(result.response, "assistant");
     if (result.requires_confirmation && result.pending_ticket) {
       showTicketConfirmation(result.pending_ticket);
-    }
-    if (result.ticket_number) {
+    } else {
       removeTicketConfirmation();
     }
     await refreshConversationList();

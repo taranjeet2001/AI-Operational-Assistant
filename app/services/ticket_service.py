@@ -87,6 +87,17 @@ class TicketService:
             )
         return list(self.session.scalars(statement.limit(20)))
 
+    def update_status(self, ticket_number: str, status: str, notes: str | None = None) -> SupportTicket | None:
+        statement = select(SupportTicket).where(SupportTicket.ticket_number == ticket_number.upper().strip())
+        ticket = self.session.scalars(statement).first()
+        if not ticket:
+            return None
+        ticket.status = status.lower().strip()
+        if notes:
+            ticket.description = f"{ticket.description}\n[Update]: {notes.strip()}"
+        self.session.commit()
+        return ticket
+
     @staticmethod
     def _cosine_similarity(first: list[float], second: list[float]) -> float:
         dot_product = sum(a * b for a, b in zip(first, second, strict=True))
